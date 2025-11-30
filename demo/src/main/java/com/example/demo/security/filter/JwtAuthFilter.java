@@ -68,8 +68,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else {
-            System.out.println("⚠️ No hay Authorization header o no empieza con 'Bearer '");
         }
 
         filterChain.doFilter(request, response);
