@@ -9,24 +9,24 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 
 @Service
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService  implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UserRepository usuarioRepository;
 
-    public CustomUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public CustomUserDetailsService(UserRepository usuarioRepository) {
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
-
+    public UserDetails loadUserByUsername(String email) throws
+            UsernameNotFoundException {
+        User usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Email no encontrado: " + email));
         return org.springframework.security.core.userdetails.User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
+                .withUsername(usuario.getEmail())
+                .password(usuario.getPassword())
                 .authorities(Collections.singletonList(
-                        new SimpleGrantedAuthority("ROLE_" + user.getRole())
+                        new SimpleGrantedAuthority("ROLE: " + usuario.getRole())
                 ))
                 .build();
     }

@@ -2,7 +2,6 @@ package com.example.demo.security.config;
 
 
 import com.example.demo.service.CustomUserDetailsService;
-import com.example.demo.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,7 +31,7 @@ public class SecurityConfig {
 
     private final com.example.demo.security.filter.JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(com.example.demo.security.filter.JwtAuthFilter jwtAuthFilter, com.example.demo.service.CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(com.example.demo.security.filter.JwtAuthFilter jwtAuthFilter, CustomUserDetailsService userDetailsService) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 

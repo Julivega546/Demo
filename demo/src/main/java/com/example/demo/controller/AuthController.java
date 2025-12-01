@@ -1,11 +1,16 @@
 package com.example.demo.controller;
 
+
 import com.example.demo.model.User;
 import com.example.demo.security.jwt.JwtService;
 import com.example.demo.service.UserService;
+
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,86 +22,76 @@ public class AuthController {
 
     private final AuthenticationManager authManager;
     private final JwtService jwtService;
-    private final UserService userService;
+    private final UserService userService ;
 
-    public AuthController(AuthenticationManager authManager, JwtService jwtService,
-                          UserService userService) {
+    public  AuthController(AuthenticationManager authManager,  JwtService jwtService, UserService userService){
         this.authManager = authManager;
         this.jwtService = jwtService;
         this.userService = userService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> register(@RequestBody Map<String, String> body){
         try {
-            String username = body.get("username");
+            String nombre = body.get("nombre");
+            String email = body.get("email");
             String password = body.get("password");
-            String role = body.getOrDefault("role", "USER"); // Valor por defecto
+            String role = body.getOrDefault("role","USER");
 
-            if (username == null || password == null || username.isBlank() || password.isBlank()) {
+            if (nombre == null || email == null || password == null || email.isBlank() || password.isBlank()) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Username y password son requeridos"));
+                        .body(Map.of("error", "Email y password son requeridos"));
             }
 
-            // Validar rol permitido
-            if (!role.equals("USER") && !role.equals("ADMIN")) {
+            if (!role.equals("USER") && !role.equals("ADMIN")){
                 role = "USER";
             }
 
-            userService.register(username, password, role);
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Usuario registrado correctamente",
-                    "role", role
-            ));
+            userService.register(nombre, email, password, role);
+            return ResponseEntity.ok()
+                    .body(Map.of("message", "Usuario registrado correctamente",
+                            "role", role
+                    ));
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "El usuario ya existe"));
+                    .body(Map.of("error" , "El usuario ya existe"));
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body){
         try {
-            String username = body.get("username");
+            String email = body.get("email");
             String password = body.get("password");
 
             Authentication auth = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
+                    new UsernamePasswordAuthenticationToken(email, password));
 
             if (auth.isAuthenticated()) {
+                User usuario = userService.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Email no encontrado"));
 
-                // Obtener el rol del usuario
-                User user = userService.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-                // Generar token con rol
-                String token = jwtService.generateToken(username, user.getRole());
+                String token = jwtService.generateToken(email, usuario.getRole());
 
                 return ResponseEntity.ok(Map.of(
                         "token", token,
-                        "username", username,
-                        "role", user.getRole()
+                        "email", email,
+                        "role" , usuario.getRole()
                 ));
             }
-
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Credenciales inválidas"));
-
+                    .body(Map.of("error", "Credenciales invalidas"));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Usuario o contraseña incorrectos"));
-        } catch (Exception e) {
+                    .body(Map.of("error" , "Email o contraseña incorrectos"));
+        } catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al procesar la solicitud"));
+                    .body(Map.of("error" , "Error al procesar la solicitud"));
         }
     }
-
-    // Endpoint para validar token
     @GetMapping("/validate")
-    public ResponseEntity<?> validateToken() {
-        return ResponseEntity.ok(Map.of("valid", true));
+    public ResponseEntity<?> validateToken(){
+        return ResponseEntity.ok(Map.of("valid" , true));
     }
 }

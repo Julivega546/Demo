@@ -12,18 +12,18 @@ import java.util.Date;
 @Service
 public class JwtService {
 
+    // ⚠️ EN PRODUCCIÓN: Usar variables de entorno
     private static final String SECRET_KEY = "una_clave_secreta_larga_y_segura_de_al_menos_32_bytes";
-    private static final long EXPIRATION = 1000 * 60 * 60 * 24;
+    private static final long EXPIRATION = 1000 * 60 * 60 * 24; // 24 horas (mejor que 1 hora)
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // Generar token con rol
-    public String generateToken(String username, String role) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
-                .subject(username)
-                .claim("role", role) // ⭐ Agregar rol al token
+                .subject(email)
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSigningKey(), Jwts.SIG.HS256)
@@ -43,8 +43,7 @@ public class JwtService {
         }
     }
 
-    // Extraer rol del token
-    public String extractRole(String token) {
+    public String extractRRole(String token){
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(getSigningKey())
@@ -52,7 +51,7 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
             return claims.get("role", String.class);
-        } catch (JwtException e) {
+        } catch (JwtException e){
             return null;
         }
     }
