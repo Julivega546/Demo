@@ -1,9 +1,7 @@
 package com.example.demo.service;
 
-
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,26 +10,29 @@ import java.util.Optional;
 
 @Service
 public class UserService {
+
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User register(String nombre, String email ,String password, String role){
-        User usuario = User.builder()
-                .nombre(nombre)
+    // Registro con rol específico
+    public User register(String username, String password, String role) {
+        User user = User.builder()
+                .username(username)
                 .password(passwordEncoder.encode(password))
-                .email(email)
-                .role(role != null ? role : "USER")
+                .role(role != null ? role : "USER") // Por defecto USER
                 .build();
-        return userRepository.save(usuario);
+        return userRepository.save(user);
     }
 
-    public User register(String nombre, String email, String password){
-        return register(nombre, email, password, "USER");
+    // Registro simple (siempre como USER)
+    public User register(String username, String password) {
+        return register(username, password, "USER");
     }
 
-    public Optional<User> findByEmail(String email){
-        return userRepository.findByEmail(email);
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

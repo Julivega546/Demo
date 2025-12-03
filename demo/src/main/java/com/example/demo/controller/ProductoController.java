@@ -2,11 +2,13 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Producto;
 import com.example.demo.service.ProductoService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -30,12 +32,14 @@ public class ProductoController {
 
     @PostMapping
     @Operation(summary = "Add a new producto")
+    @PreAuthorize("hasRole('ADMIN')")
     public Producto createProducto(@RequestBody Producto producto) {
         return productoService.saveProducto(producto);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing producto")
+    @PreAuthorize("hasRole('ADMIN')")
     public Producto updateProducto(@PathVariable Long id, @RequestBody Producto producto) {
         Producto existingProducto = productoService.getProductoById(id);
         if (existingProducto != null) {
@@ -49,6 +53,7 @@ public class ProductoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a producto")
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteProducto(@PathVariable Long id) {
         productoService.deleteProducto(id);
     }
