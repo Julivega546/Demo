@@ -41,14 +41,11 @@ public class ProductoController {
     @Operation(summary = "Update an existing producto")
     @PreAuthorize("hasRole('ADMIN')")
     public Producto updateProducto(@PathVariable Long id, @RequestBody Producto producto) {
-        Producto existingProducto = productoService.getProductoById(id);
-        if (existingProducto != null) {
-            existingProducto.setNombre(producto.getNombre());
-            existingProducto.setDescripcion(producto.getDescripcion());
-            existingProducto.setPrecio(producto.getPrecio());
-            return productoService.saveProducto(existingProducto);
-        }
-        return null;
+        Producto existing = productoService.getProductoById(id);
+        existing.setNombre(producto.getNombre());
+        existing.setDescripcion(producto.getDescripcion());
+        existing.setPrecio(producto.getPrecio());
+        return productoService.saveProducto(existing);
     }
 
     @DeleteMapping("/{id}")

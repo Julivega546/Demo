@@ -1,13 +1,14 @@
 package com.example.demo.security.filter;
 
-import com.example.demo.service.CustomUserDetailsService;
 import com.example.demo.security.jwt.JwtService;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import com.example.demo.service.CustomUserDetailsService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,48 +26,40 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        String path = request.getServletPath();
 
-        // NO validar token en rutas públicas
-        if (path.startsWith("/auth/") || path.startsWith("/h2-console/")) {
+        if (path.startsWith("/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                String token = authHeader.substring(7);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-                // ⭐ VALIDAR EL TOKEN
-                if (jwtService.isTokenValid(token)) {
-                    String username = jwtService.extractUsername(token);
+        String token = authHeader.substring(7);
+        String username = jwtService.extractUsername(token);
 
-                    // ⭐ CARGAR EL USUARIO
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                    // ⭐ CREAR LA AUTENTICACIÓN
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // ⭐ ESTABLECER LA AUTENTICACIÓN EN EL CONTEXTO DE SEGURIDAD
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    System.out.println("❌ Token inválido"); // ⭐ DEBUG
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (jwtService.isTokenValid(token)) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
 
