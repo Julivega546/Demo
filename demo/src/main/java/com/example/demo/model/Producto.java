@@ -5,7 +5,6 @@ import lombok.*;
 
 @Entity
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Table(name = "productos")
@@ -22,5 +21,15 @@ public class Producto {
     private String descripcion;
 
     @Column(nullable = false)
-    private Double precio;
+    private int precio;
+    private String image; // <-- NUEVO
+
+    public Producto() {}
+
+    public Producto(String nombre, String descripcion, int precio, String image) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.image = image;
+    }
 }
